@@ -51,7 +51,7 @@ void chip8_load_rom(char *romName)
 	//check file size
 	if(fseek(rom, 0, SEEK_END) == -1)
 	{
-		perror("fseek");
+		perror("fseek (check file size)");
 		exit(1);
 	}
 	long romSize = ftell(rom);
@@ -68,11 +68,21 @@ void chip8_load_rom(char *romName)
 		exit(1);
 	}
 
-	//load ROM into memory
-	if(fread(chip8.mem + 0x200, 1, (size_t)romSize, rom) != 0)
+	//move file offset back to start before reading
+	if(fseek(rom, 0, SEEK_SET) == -1)
 	{
-		perror("fread");
+		perror("fseek (reset file offset)");
 		exit(1);
+	}
+
+	//load ROM into memory
+	if(fread(chip8.mem + 0x200, 1, (size_t)romSize, rom) < (size_t)romSize)
+	{
+		if(ferror(rom))
+		{
+			perror("fread");
+			exit(1);
+		}
 	}
 
 	//close file
