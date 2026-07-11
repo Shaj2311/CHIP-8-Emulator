@@ -4,9 +4,6 @@
 #include <stdio.h>
 #define DBG_ROM_NAME "test.rom"
 
-//Create VM
-Chip8 chip8;
-
 void chip8_reset_hardware();
 void chip8_load_rom(char *romName);
 void chip8_init();

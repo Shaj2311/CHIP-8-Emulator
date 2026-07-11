@@ -1,4 +1,6 @@
 #include <stdint.h>
+
+//VM hardware structure
 typedef struct
 {
 	//GPRs
@@ -20,6 +22,7 @@ typedef struct
 	uint8_t keypad[16]; //16 keys
 } Chip8;
 
+//Hexadecimal character font set
 uint8_t fontset[80] = {
 	0xF0, 0x90, 0x90, 0x90, 0xF0, //0
 	0x20, 0x60, 0x20, 0x20, 0x70, //1
@@ -38,3 +41,6 @@ uint8_t fontset[80] = {
 	0xF0, 0x80, 0xF0, 0x80, 0xF0, //E
 	0xF0, 0x80, 0xF0, 0x80, 0x80, //F
 };
+
+//VM instantiation
+Chip8 chip8;
