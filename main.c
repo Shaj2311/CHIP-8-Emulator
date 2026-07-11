@@ -10,6 +10,7 @@ Chip8 chip8;
 void chip8_reset_hardware();
 void chip8_load_rom(char *romName);
 void chip8_init();
+void interpret_opcode(uint16_t opcode);
 
 int main()
 {
@@ -17,7 +18,7 @@ int main()
 	chip8_init();
 
 	//FDE cycle
-	for(int i = 0; i < 20; i++)
+	for(int i = 0; i < 35; i++)
 	{
 		//use fancy bit manipulation to read Big Endian to Big Endian
 		//(directly fetching a uint16_t value will flip the bytes around as
@@ -25,6 +26,7 @@ int main()
 		uint16_t opcode = (chip8.mem[chip8.pc] << 8) | chip8.mem[chip8.pc + 1];
 
 		printf("PC value: %04x | Read opcode: %04x\n", chip8.pc, opcode);
+		interpret_opcode(opcode);
 
 		//move forward by two bytes
 		chip8.pc += 2;
@@ -123,4 +125,68 @@ void chip8_init()
 
 	//set program counter to 0x200
 	chip8.pc = 0x200;
+}
+
+void interpret_opcode(uint16_t opcode)
+{
+	//extract information
+	uint8_t opcodeFamily = opcode >> 12;
+	uint8_t addr = opcode & 0x0FFF;
+	uint8_t regx = (opcode & 0x0F00) >> 8;
+	uint8_t regy = (opcode & 0x00F0) >> 4;
+	uint8_t byteVal = (opcode & 0x00FF);
+	uint8_t nibbleVal = opcode & 0x000F;
+
+	//check opcode family
+	switch(opcodeFamily)
+	{
+		case 0:
+			puts("We got 0");
+			break;
+		case 1:
+			puts("We got 1");
+			break;
+		case 2:
+			puts("We got 2");
+			break;
+		case 3:
+			puts("We got 3");
+			break;
+		case 4:
+			puts("We got 4");
+			break;
+		case 5:
+			puts("We got 5");
+			break;
+		case 6:
+			puts("We got 6");
+			break;
+		case 7:
+			puts("We got 7");
+			break;
+		case 8:
+			puts("We got 8");
+			break;
+		case 9:
+			puts("We got 9");
+			break;
+		case 0xA:
+			puts("We got A");
+			break;
+		case 0xB:
+			puts("We got B");
+			break;
+		case 0xC:
+			puts("We got C");
+			break;
+		case 0xD:
+			puts("We got D");
+			break;
+		case 0xE:
+			puts("We got E");
+			break;
+		case 0xF:
+			puts("We got F");
+			break;
+	}
 }
