@@ -13,7 +13,22 @@ void chip8_init();
 
 int main()
 {
+	//initialize machine and load ROM
 	chip8_init();
+
+	//FDE cycle
+	for(int i = 0; i < 20; i++)
+	{
+		//use fancy bit manipulation to read Big Endian to Big Endian
+		//(directly fetching a uint16_t value will flip the bytes around as
+		// it's expecting them to be in Little Endian)
+		uint16_t opcode = (chip8.mem[chip8.pc] << 8) | chip8.mem[chip8.pc + 1];
+
+		printf("PC value: %04x | Read opcode: %04x\n", chip8.pc, opcode);
+
+		//move forward by two bytes
+		chip8.pc += 2;
+	}
 }
 
 void chip8_reset_hardware()
