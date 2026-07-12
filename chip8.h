@@ -9,7 +9,7 @@ typedef struct
 
 	uint16_t idx; //index reg
 
-	uint8_t stack[64];
+	uint16_t stack[16];
 	uint8_t sp; //stack ptr
 
 	//timers
