@@ -48,12 +48,12 @@ int main()
 		//(directly fetching a uint16_t value will flip the bytes around as
 		// it's expecting them to be in Little Endian)
 		uint16_t opcode = (chip8.mem[chip8.pc] << 8) | chip8.mem[chip8.pc + 1];
-
 		printf("PC value: %04x | Read opcode: %04x\n", chip8.pc, opcode);
-		interpret_opcode(opcode);
 
 		//move forward by two bytes
 		chip8.pc += 2;
+
+		interpret_opcode(opcode);
 	}
 }
 
@@ -173,7 +173,6 @@ void interpret_opcode(uint16_t opcode)
 				SYS(addr);
 			break;
 		case 1:
-			printf("Jumping to 0x%03x\n", addr);
 			JP(addr);
 			break;
 		case 2:
