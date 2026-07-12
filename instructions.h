@@ -2,11 +2,11 @@
 #define INSTRUCT_H
 #include <stdint.h>
 
-void SYS(uint8_t addr);
+void SYS(uint16_t addr);
 void CLS();
 void RET();
-void JP(uint8_t addr);
-void CALL(uint8_t addr);
+void JP(uint16_t addr);
+void CALL(uint16_t addr);
 void SEvb(uint8_t regx, uint8_t byte);
 void SNEvb(uint8_t regx, uint8_t byte);
 void SEvv(uint8_t regx, uint8_t regy);
@@ -22,8 +22,8 @@ void SHR(uint8_t regx);
 void SUBN(uint8_t regx, uint8_t regy);
 void SHL(uint8_t regx);
 void SNEvv(uint8_t regx, uint8_t regy);
-void LDi(uint8_t addr);
-void JPv(uint8_t addr);
+void LDi(uint16_t addr);
+void JPv(uint16_t addr);
 void RND(uint8_t regx, uint8_t byte);
 void DRW(uint8_t regx, uint8_t regy, uint8_t nibble);
 void SKP(uint8_t regx);

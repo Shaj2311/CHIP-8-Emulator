@@ -155,7 +155,7 @@ void interpret_opcode(uint16_t opcode)
 {
 	//extract information
 	uint8_t opcodeFamily = opcode >> 12;
-	uint8_t addr = opcode & 0x0FFF;
+	uint16_t addr = opcode & 0x0FFF;
 	uint8_t regx = (opcode & 0x0F00) >> 8;
 	uint8_t regy = (opcode & 0x00F0) >> 4;
 	uint8_t byteVal = (opcode & 0x00FF);
@@ -173,6 +173,7 @@ void interpret_opcode(uint16_t opcode)
 				SYS(addr);
 			break;
 		case 1:
+			printf("Jumping to 0x%03x\n", addr);
 			JP(addr);
 			break;
 		case 2:

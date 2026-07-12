@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void SYS(uint8_t addr)
+void SYS(uint16_t addr)
 {
 	//The documentation says this instruction is ignored by
 	//modern interpreters. Okay :)
@@ -22,13 +22,13 @@ void RET()
 	chip8.pc = chip8.stack[chip8.sp--];
 }
 
-void JP(uint8_t addr)
+void JP(uint16_t addr)
 {
 	//jump to addr
 	chip8.pc = addr;
 }
 
-void CALL(uint8_t addr)
+void CALL(uint16_t addr)
 {
 	//call subroutine at addr
 	chip8.stack[++(chip8.sp)] = chip8.pc;
@@ -136,13 +136,13 @@ void SNEvv(uint8_t regx, uint8_t regy)
 		chip8.pc += 2;
 }
 
-void LDi(uint8_t addr)
+void LDi(uint16_t addr)
 {
 	//set index register to addr
 	chip8.idx = addr;
 }
 
-void JPv(uint8_t addr)
+void JPv(uint16_t addr)
 {
 	//jump to location (register 0 + addr)
 	chip8.pc = addr + chip8.vregs[0];
