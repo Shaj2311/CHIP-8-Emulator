@@ -118,7 +118,7 @@ void SUBN(uint8_t regx, uint8_t regy)
 void SHL(uint8_t regx)
 {
 	//bit-shift register x left by 1 bit
-	chip8.vregs[0xF] = chip8.vregs[regx] & 0x8000;
+	chip8.vregs[0xF] = chip8.vregs[regx] & 0x80;
 	chip8.vregs[regx] *= 2;
 }
 
