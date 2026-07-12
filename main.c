@@ -185,8 +185,16 @@ void interpret_opcode(uint16_t opcode)
 			SNEvb(regx, byteVal);
 			break;
 		case 5:
-			SEvv(regx, regy);
-			break;
+			if(nibbleVal == 0)
+			{
+				SEvv(regx, regy);
+				break;
+			}
+			else
+			{
+				puts("Invalid opcode detected");
+				exit(1);
+			}
 		case 6:
 			LDvb(regx, byteVal);
 			break;
@@ -222,14 +230,23 @@ void interpret_opcode(uint16_t opcode)
 					break;
 				case 0xE:
 					SHL(regx);
+					break;
 				default:
 					puts("Invalid opcode detected");
 					exit(1);
 			}
 			break;
 		case 9:
-			SNEvv(regx, regy);
-			break;
+			if(nibbleVal == 0)
+			{
+				SNEvv(regx, regy);
+				break;
+			}
+			else
+			{
+				puts("Invalid opcode detected");
+				exit(1);
+			}
 		case 0xA:
 			LDi(addr);
 			break;
@@ -257,7 +274,7 @@ void interpret_opcode(uint16_t opcode)
 			}
 			break;
 		case 0xF:
-			switch(opcode & 0x00FF)
+			switch(byteVal)
 			{
 				case 0x07:
 					LDvd(regx);
