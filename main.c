@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #define DBG_ROM_NAME "test.rom"
 
 void chip8_reset_hardware();
@@ -11,6 +12,8 @@ void interpret_opcode(uint16_t opcode);
 
 int main()
 {
+	srand(time(0));
+
 	//initialize machine and load ROM
 	chip8_init();
 
