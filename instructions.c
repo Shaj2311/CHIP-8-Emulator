@@ -1,7 +1,14 @@
+#include "instructions.h"
 #include "chip8.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+void SYS(uint8_t addr)
+{
+	//The documentation says this instruction is ignored by
+	//modern interpreters. Okay :)
+}
 
 void CLS()
 {
