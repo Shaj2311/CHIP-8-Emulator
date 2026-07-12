@@ -51,10 +51,14 @@ SDL_Window *sdl_window;
 SDL_Renderer *sdl_renderer;
 SDL_Texture *sdl_frame_texture;
 uint32_t sdl_render_pixels[64 * 32];
+uint64_t sdl_perf_freq;
 int sdl_running = 1;
 
 int main(int argc, char **argv)
 {
+	//set performance frequency (to convert ticks to milliseconds later)
+	sdl_perf_freq = SDL_GetPerformanceFrequency();
+
 	//set random seed
 	srand(time(0));
 
@@ -67,6 +71,8 @@ int main(int argc, char **argv)
 	//FDE cycle
 	while(sdl_running)
 	{
+		uint64_t startTicks = SDL_GetPerformanceCounter();
+
 		SDL_Event event;
 		while(SDL_PollEvent(&event))
 		{
@@ -85,6 +91,20 @@ int main(int argc, char **argv)
 			FDE_cycle();
 
 		sdl_render_frame();
+
+		//get end ticks
+		uint64_t endTicks = SDL_GetPerformanceCounter();
+
+		//calculate time delta and apply pace limiting
+		double milliseconds = ((double)(endTicks - startTicks) / sdl_perf_freq) * 1000;
+		if(milliseconds < (1000.f/60))
+			SDL_Delay((uint32_t)((1000.f/60) - milliseconds));
+
+		//update timers
+		if(chip8.delay)
+			chip8.delay--;
+		if(chip8.sound)
+			chip8.sound--;
 	}
 
 	sdl_cleanup();
