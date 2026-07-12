@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#define DBG_ROM_NAME "chip8-test-rom-with-audio.ch8"
+#define DBG_ROM_NAME "test.rom"
 
 #define INSTRUCT_PER_ITER 10
 
@@ -24,6 +24,7 @@ void interpret_opcode(uint16_t opcode);
 
 void sdl_init();
 void sdl_render_frame();
+void sdl_fill_audio_buffer();
 void sdl_cleanup();
 
 //hexadecimal character font set
@@ -56,6 +57,7 @@ SDL_Texture *sdl_frame_texture;
 SDL_AudioStream *sdl_audio_stream;
 uint32_t sdl_render_pixels[64 * 32];
 uint64_t sdl_perf_freq;
+int16_t sdl_audio_samples[SDL_AUDIO_SAMPLE_RATE];
 int sdl_running = 1;
 
 int main(int argc, char **argv)
@@ -72,13 +74,13 @@ int main(int argc, char **argv)
 	//Initialize SDL
 	sdl_init();
 
+	puts("Executing ROM");
 	//FDE cycle
 	while(sdl_running)
 	{
-		//TEST
-		//chip8.sound = 64;
-
 		uint64_t startTicks = SDL_GetPerformanceCounter();
+
+		sdl_fill_audio_buffer();
 
 		SDL_Event event;
 		while(SDL_PollEvent(&event))
@@ -111,16 +113,19 @@ int main(int argc, char **argv)
 		if(chip8.delay)
 			chip8.delay--;
 		if(chip8.sound)
+		{
 			chip8.sound--;
+		}
 
 		//update audio status
-		if(chip8.sound)
-			SDL_ResumeAudioStreamDevice(sdl_audio_stream);
-		else
+		if(chip8.sound == 0)
 			SDL_PauseAudioStreamDevice(sdl_audio_stream);
+		else
+			SDL_ResumeAudioStreamDevice(sdl_audio_stream);
 	}
 
 	sdl_cleanup();
+	puts("Shutting down");
 	return 0;
 }
 
@@ -275,7 +280,7 @@ void interpret_opcode(uint16_t opcode)
 			}
 			else
 			{
-				puts("Invalid opcode detected");
+				printf("Invalid opcode detected: 0x%04x\n", opcode);
 				exit(1);
 			}
 		case 6:
@@ -327,7 +332,7 @@ void interpret_opcode(uint16_t opcode)
 			}
 			else
 			{
-				puts("Invalid opcode detected");
+				printf("Invalid opcode detected: 0x%04x\n", opcode);
 				exit(1);
 			}
 		case 0xA:
@@ -352,12 +357,11 @@ void interpret_opcode(uint16_t opcode)
 					SKNP(regx);
 					break;
 				default:
-					puts("Invalid opcode detected");
+					printf("Invalid opcode detected: 0x%04x\n", opcode);
 					exit(1);
 			}
 			break;
 		case 0xF:
-			puts("F found");
 			switch(byteVal)
 			{
 				case 0x07:
@@ -370,7 +374,6 @@ void interpret_opcode(uint16_t opcode)
 					LDdv(regx);
 					break;
 				case 0x18:
-					puts("yo");
 					LDsv(regx);
 					break;
 				case 0x1E:
@@ -421,14 +424,13 @@ void sdl_init()
 			0
 			);
 	//create square wave audio samples
-	int16_t samples[SDL_AUDIO_SAMPLE_RATE];
 	for(int i = 0; i < SDL_AUDIO_SAMPLE_RATE; i++)
 	{
 		int cyclePeriod = SDL_AUDIO_SAMPLE_RATE / SDL_AUDIO_FREQUENCY;
-		samples[i] = (i % cyclePeriod) < (cyclePeriod / 2) ? SDL_AUDIO_VOLUME : -SDL_AUDIO_VOLUME;
+		sdl_audio_samples[i] = (i % cyclePeriod) < (cyclePeriod / 2) ? SDL_AUDIO_VOLUME : -SDL_AUDIO_VOLUME;
 	}
 	//push audio into stream queue
-	SDL_PutAudioStreamData(sdl_audio_stream, samples, sizeof(samples));
+	SDL_PutAudioStreamData(sdl_audio_stream, sdl_audio_samples, sizeof(sdl_audio_samples));
 }
 
 void sdl_render_frame()
@@ -445,6 +447,18 @@ void sdl_render_frame()
 	SDL_RenderTexture(sdl_renderer, sdl_frame_texture, 0, 0); //0,0 means put WHOLE texture onto WHOLE screen
 	//display
 	SDL_RenderPresent(sdl_renderer);
+}
+
+void sdl_fill_audio_buffer()
+{
+	int16_t bytesQueued = SDL_GetAudioStreamQueued(sdl_audio_stream);
+
+	if(
+			SDL_GetAudioStreamQueued(sdl_audio_stream)
+			<
+			(int16_t)((SDL_AUDIO_SAMPLE_RATE * sizeof(int16_t)) / 10)
+			)
+		SDL_PutAudioStreamData(sdl_audio_stream, sdl_audio_samples, sizeof(sdl_audio_samples));
 }
 
 void sdl_cleanup()
