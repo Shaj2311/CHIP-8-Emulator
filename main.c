@@ -1,4 +1,5 @@
 #include "chip8.h"
+#include "instructions.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -164,52 +165,115 @@ void interpret_opcode(uint16_t opcode)
 	switch(opcodeFamily)
 	{
 		case 0:
-			puts("We got 0");
+			if(opcode == 0x00E0)
+				CLS();
+			else if(opcode == 0x00EE)
+				RET();
+			else
+				SYS(addr);
 			break;
 		case 1:
-			puts("We got 1");
+			JP(addr);
 			break;
 		case 2:
-			puts("We got 2");
+			CALL(addr);
 			break;
 		case 3:
-			puts("We got 3");
+			SEvb(regx, byteVal);
 			break;
 		case 4:
-			puts("We got 4");
+			SNEvb(regx, byteVal);
 			break;
 		case 5:
-			puts("We got 5");
+			SEvv(regx, regy);
 			break;
 		case 6:
-			puts("We got 6");
+			LDvb(regx, byteVal);
 			break;
 		case 7:
-			puts("We got 7");
+			ADD(regx, byteVal);
 			break;
 		case 8:
-			puts("We got 8");
+			switch(opcode & 0x000F)
+			{
+				case 0:
+					LDvv(regx, regy);
+					break;
+				case 1:
+					OR(regx, regy);
+					break;
+				case 2:
+					AND(regx, regy);
+					break;
+				case 3:
+					XOR(regx, regy);
+					break;
+				case 4:
+					ADDc(regx, regy);
+					break;
+				case 5:
+					SUBc(regx, regy);
+					break;
+				case 6:
+					SHR(regx);
+					break;
+				case 7:
+					SUBN(regx, regy);
+					break;
+				default:
+					puts("Invalid opcode detected");
+					exit(1);
+			}
 			break;
 		case 9:
-			puts("We got 9");
+			SNEvv(regx, regy);
 			break;
 		case 0xA:
-			puts("We got A");
+			LDi(addr);
 			break;
 		case 0xB:
-			puts("We got B");
+			JPv(addr);
 			break;
 		case 0xC:
-			puts("We got C");
+			RND(regx, byteVal);
 			break;
 		case 0xD:
-			puts("We got D");
+			DRW(regx, regy, nibbleVal);
 			break;
 		case 0xE:
-			puts("We got E");
+			SKP(regx);
 			break;
 		case 0xF:
-			puts("We got F");
+			switch(opcode & 0x00FF)
+			{
+				case 0x0A:
+					LDvk(regx);
+					break;
+				case 0x15:
+					LDdv(regx);
+					break;
+				case 0x18:
+					LDsv(regx);
+					break;
+				case 0x1E:
+					ADDI(regx);
+					break;
+				case 0x29:
+					LDf(regx);
+					break;
+				case 0x33:
+					LDb(regx);
+					break;
+				case 0x55:
+					LDiv(regx);
+					break;
+				case 0x65:
+					LDvi(regx);
+					break;
+				default:
+					puts("Invalid opcode detected");
+					exit(1);
+			}
 			break;
 	}
 }
