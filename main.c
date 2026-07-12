@@ -220,6 +220,8 @@ void interpret_opcode(uint16_t opcode)
 				case 7:
 					SUBN(regx, regy);
 					break;
+				case 0xE:
+					SHL(regx);
 				default:
 					puts("Invalid opcode detected");
 					exit(1);
@@ -241,11 +243,25 @@ void interpret_opcode(uint16_t opcode)
 			DRW(regx, regy, nibbleVal);
 			break;
 		case 0xE:
-			SKP(regx);
+			switch(opcode & 0x00FF)
+			{
+				case 0x9E:
+					SKP(regx);
+					break;
+				case 0xA1:
+					SKNP(regx);
+					break;
+				default:
+					puts("Invalid opcode detected");
+					exit(1);
+			}
 			break;
 		case 0xF:
 			switch(opcode & 0x00FF)
 			{
+				case 0x07:
+					LDvd(regx);
+					break;
 				case 0x0A:
 					LDvk(regx);
 					break;
