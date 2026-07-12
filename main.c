@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#define DBG_ROM_NAME "IBM_Logo.ch8"
+#define DBG_ROM_NAME "chip8-test-rom-with-audio.ch8"
 
 #define INSTRUCT_PER_ITER 10
 
@@ -12,6 +12,9 @@
 #include <SDL3/SDL_main.h>
 #define SDL_WINDOW_WIDTH 640
 #define SDL_WINDOW_HEIGHT 320
+#define SDL_AUDIO_SAMPLE_RATE 44100
+#define SDL_AUDIO_FREQUENCY 440
+#define SDL_AUDIO_VOLUME 3000
 
 void chip8_reset_hardware();
 void chip8_load_rom(char *romName);
@@ -50,6 +53,7 @@ Chip8 chip8;
 SDL_Window *sdl_window;
 SDL_Renderer *sdl_renderer;
 SDL_Texture *sdl_frame_texture;
+SDL_AudioStream *sdl_audio_stream;
 uint32_t sdl_render_pixels[64 * 32];
 uint64_t sdl_perf_freq;
 int sdl_running = 1;
@@ -71,6 +75,9 @@ int main(int argc, char **argv)
 	//FDE cycle
 	while(sdl_running)
 	{
+		//TEST
+		//chip8.sound = 64;
+
 		uint64_t startTicks = SDL_GetPerformanceCounter();
 
 		SDL_Event event;
@@ -105,6 +112,12 @@ int main(int argc, char **argv)
 			chip8.delay--;
 		if(chip8.sound)
 			chip8.sound--;
+
+		//update audio status
+		if(chip8.sound)
+			SDL_ResumeAudioStreamDevice(sdl_audio_stream);
+		else
+			SDL_PauseAudioStreamDevice(sdl_audio_stream);
 	}
 
 	sdl_cleanup();
@@ -291,7 +304,7 @@ void interpret_opcode(uint16_t opcode)
 					SUBN(regx, regy);
 					break;
 				default:
-					puts("Invalid opcode detected");
+					printf("Invalid opcode detected: 0x%04x\n", opcode);
 					exit(1);
 			}
 			break;
@@ -314,6 +327,7 @@ void interpret_opcode(uint16_t opcode)
 			SKP(regx);
 			break;
 		case 0xF:
+			puts("F found");
 			switch(opcode & 0x00FF)
 			{
 				case 0x0A:
@@ -323,6 +337,7 @@ void interpret_opcode(uint16_t opcode)
 					LDdv(regx);
 					break;
 				case 0x18:
+					puts("yo");
 					LDsv(regx);
 					break;
 				case 0x1E:
@@ -341,7 +356,7 @@ void interpret_opcode(uint16_t opcode)
 					LDvi(regx);
 					break;
 				default:
-					puts("Invalid opcode detected");
+					printf("Invalid opcode detected: 0x%04x\n", opcode);
 					exit(1);
 			}
 			break;
@@ -350,12 +365,37 @@ void interpret_opcode(uint16_t opcode)
 
 void sdl_init()
 {
-	SDL_Init(SDL_INIT_VIDEO);
+	//Initialize video and audio
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+
+	//set up window, renderer and texture
 	sdl_window = SDL_CreateWindow("CHIP-8", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0);
 	sdl_renderer = SDL_CreateRenderer(sdl_window, 0);
 	sdl_frame_texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 64, 32);
-
 	SDL_SetTextureScaleMode(sdl_frame_texture, SDL_SCALEMODE_NEAREST);
+
+	//set up audio
+	//define audio specs
+	SDL_AudioSpec spec;
+	spec.channels = 1;
+	spec.format = SDL_AUDIO_S16LE;
+	spec.freq = SDL_AUDIO_SAMPLE_RATE;
+	//open audio stream
+	sdl_audio_stream = SDL_OpenAudioDeviceStream(
+			SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+			&spec,
+			0,
+			0
+			);
+	//create square wave audio samples
+	int16_t samples[SDL_AUDIO_SAMPLE_RATE];
+	for(int i = 0; i < SDL_AUDIO_SAMPLE_RATE; i++)
+	{
+		int cyclePeriod = SDL_AUDIO_SAMPLE_RATE / SDL_AUDIO_FREQUENCY;
+		samples[i] = (i % cyclePeriod) < (cyclePeriod / 2) ? SDL_AUDIO_VOLUME : -SDL_AUDIO_VOLUME;
+	}
+	//push audio into stream queue
+	SDL_PutAudioStreamData(sdl_audio_stream, samples, sizeof(samples));
 }
 
 void sdl_render_frame()
@@ -378,5 +418,6 @@ void sdl_cleanup()
 {
 	SDL_DestroyRenderer(sdl_renderer);
 	SDL_DestroyWindow(sdl_window);
+	SDL_DestroyAudioStream(sdl_audio_stream);
 	SDL_Quit();
 }
