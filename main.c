@@ -4,12 +4,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#define DBG_ROM_NAME "test.rom"
+#define DBG_ROM_NAME "IBM_Logo.ch8"
+
+#define INSTRUCT_PER_ITER 10
+
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#define SDL_WINDOW_WIDTH 640
+#define SDL_WINDOW_HEIGHT 320
 
 void chip8_reset_hardware();
 void chip8_load_rom(char *romName);
 void chip8_init();
+void FDE_cycle();
 void interpret_opcode(uint16_t opcode);
+
+void sdl_init();
+void sdl_render_frame();
+void sdl_cleanup();
 
 //hexadecimal character font set
 uint8_t fontset[80] = {
@@ -34,27 +46,49 @@ uint8_t fontset[80] = {
 //VM instantiation
 Chip8 chip8;
 
-int main()
+//SDL Globals
+SDL_Window *sdl_window;
+SDL_Renderer *sdl_renderer;
+SDL_Texture *sdl_frame_texture;
+uint32_t sdl_render_pixels[64 * 32];
+int sdl_running = 1;
+
+int main(int argc, char **argv)
 {
+	//set random seed
 	srand(time(0));
 
 	//initialize machine and load ROM
 	chip8_init();
 
+	//Initialize SDL
+	sdl_init();
+
 	//FDE cycle
-	for(int i = 0; i < 35; i++)
+	while(sdl_running)
 	{
-		//use fancy bit manipulation to read Big Endian to Big Endian
-		//(directly fetching a uint16_t value will flip the bytes around as
-		// it's expecting them to be in Little Endian)
-		uint16_t opcode = (chip8.mem[chip8.pc] << 8) | chip8.mem[chip8.pc + 1];
-		printf("PC value: %04x | Read opcode: %04x\n", chip8.pc, opcode);
+		SDL_Event event;
+		while(SDL_PollEvent(&event))
+		{
+			switch(event.type)
+			{
+				case SDL_EVENT_QUIT:
+					sdl_running = 0;
+					break;
+				//TODO: SDL_EVENT_KEY_DOWN/UP
+			}
+		}
 
-		//move forward by two bytes
-		chip8.pc += 2;
 
-		interpret_opcode(opcode);
+		//run INSTRUCT_PER_ITER instructions
+		for(int i = 0; i < INSTRUCT_PER_ITER; i++)
+			FDE_cycle();
+
+		sdl_render_frame();
 	}
+
+	sdl_cleanup();
+	return 0;
 }
 
 void chip8_reset_hardware()
@@ -149,6 +183,22 @@ void chip8_init()
 
 	//set program counter to 0x200
 	chip8.pc = 0x200;
+}
+
+void FDE_cycle()
+{
+	//use fancy bit manipulation to read Big Endian to Big Endian
+	//(directly fetching a uint16_t value will flip the bytes around as
+	// it's expecting them to be in Little Endian)
+	uint16_t opcode = (chip8.mem[chip8.pc] << 8) | chip8.mem[chip8.pc + 1];
+
+	//move forward by two bytes
+	chip8.pc += 2;
+	//loop back if reached end of memory
+	if(chip8.pc > 0xFFF)
+		chip8.pc = 0x200;
+
+	interpret_opcode(opcode);
 }
 
 void interpret_opcode(uint16_t opcode)
@@ -276,4 +326,37 @@ void interpret_opcode(uint16_t opcode)
 			}
 			break;
 	}
+}
+
+void sdl_init()
+{
+	SDL_Init(SDL_INIT_VIDEO);
+	sdl_window = SDL_CreateWindow("CHIP-8", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0);
+	sdl_renderer = SDL_CreateRenderer(sdl_window, 0);
+	sdl_frame_texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 64, 32);
+
+	SDL_SetTextureScaleMode(sdl_frame_texture, SDL_SCALEMODE_NEAREST);
+}
+
+void sdl_render_frame()
+{
+	//prepare renderPixels
+	for(int i = 0; i < 64 * 32; i++)
+		sdl_render_pixels[i] = chip8.frameBuffer[i] ? 0xFFFFFFFF : 0x000000FF;
+
+	//update texture to draw
+	SDL_UpdateTexture(sdl_frame_texture, 0, sdl_render_pixels, 64 * 4); //one row is 64 positions wide, 4 bytes for one pixel (RGBA)
+	//clear screen
+	SDL_RenderClear(sdl_renderer);
+	//draw texture onto screen
+	SDL_RenderTexture(sdl_renderer, sdl_frame_texture, 0, 0); //0,0 means put WHOLE texture onto WHOLE screen
+	//display
+	SDL_RenderPresent(sdl_renderer);
+}
+
+void sdl_cleanup()
+{
+	SDL_DestroyRenderer(sdl_renderer);
+	SDL_DestroyWindow(sdl_window);
+	SDL_Quit();
 }
