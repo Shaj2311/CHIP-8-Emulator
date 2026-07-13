@@ -171,7 +171,7 @@ void DRW(uint8_t regx, uint8_t regy, uint8_t nibble)
 		uint8_t sprite = chip8.mem[(chip8.idx + i) % 4096];
 		uint8_t x,y;
 
-		y = (starty + i) % 32;
+		y = (starty + i) % CHIP8_FRAME_HEIGHT;
 
 		//width
 		for(int j = 0; j < 8; j++)
@@ -180,10 +180,10 @@ void DRW(uint8_t regx, uint8_t regy, uint8_t nibble)
 			if(!(sprite & (0x80 >> j)))
 				continue;
 
-			x = (startx + j) % 64;
+			x = (startx + j) % CHIP8_FRAME_WIDTH;
 
 			//calculate screen position
-			uint16_t frameIndex = (y * 64) + x;
+			uint16_t frameIndex = (y * CHIP8_FRAME_WIDTH) + x;
 
 			//check if current drawn bit is on (collision)
 			if(chip8.frameBuffer[frameIndex])

@@ -1,6 +1,8 @@
 #ifndef CHIP8_H
 #define CHIP8_H
 #include <stdint.h>
+#define CHIP8_FRAME_WIDTH 64
+#define CHIP8_FRAME_HEIGHT 32
 
 typedef struct
 {
@@ -16,7 +18,7 @@ typedef struct
 	uint8_t delay;
 	uint8_t sound;
 
-	uint8_t frameBuffer[64 * 32]; //display
+	uint8_t frameBuffer[CHIP8_FRAME_WIDTH * CHIP8_FRAME_HEIGHT]; //display
 	uint16_t pc; //program counter
 	uint8_t mem[4096]; //RAM
 

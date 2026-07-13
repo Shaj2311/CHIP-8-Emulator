@@ -1,19 +1,25 @@
 #include "chip8.h"
 #include "instructions.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 
-#define DEFAULT_CYCLES_PER_FRAME 10
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#define SDL_WINDOW_WIDTH 640
-#define SDL_WINDOW_HEIGHT 320
+
+//CONFIGURE THESE TO YOUR LIKING
+#define DEFAULT_CYCLES_PER_FRAME 10
+#define SDL_WINDOW_SCALE 20
 #define SDL_AUDIO_SAMPLE_RATE 44100
 #define SDL_AUDIO_FREQUENCY 440
 #define SDL_AUDIO_VOLUME 3000
+#define SDL_ON_RGBA 0xFF00FF00
+#define SDL_OFF_RGBA 0xFF000000
+
+#define SDL_WINDOW_WIDTH (CHIP8_FRAME_WIDTH * SDL_WINDOW_SCALE)
+#define SDL_WINDOW_HEIGHT (CHIP8_FRAME_HEIGHT * SDL_WINDOW_SCALE)
 
 //CHIP-8 helpers
 void chip8_reset_hardware();
@@ -61,7 +67,7 @@ SDL_Window *sdl_window;
 SDL_Renderer *sdl_renderer;
 SDL_Texture *sdl_frame_texture;
 SDL_AudioStream *sdl_audio_stream;
-uint32_t sdl_render_pixels[64 * 32];
+uint32_t sdl_render_pixels[CHIP8_FRAME_WIDTH * CHIP8_FRAME_HEIGHT];
 uint64_t sdl_perf_freq;
 int16_t sdl_audio_samples[SDL_AUDIO_SAMPLE_RATE];
 int sdl_running = 1;
@@ -464,7 +470,7 @@ void sdl_init()
 	//set up window, renderer and texture
 	sdl_window = SDL_CreateWindow("CHIP-8", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT, 0);
 	sdl_renderer = SDL_CreateRenderer(sdl_window, 0);
-	sdl_frame_texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 64, 32);
+	sdl_frame_texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, CHIP8_FRAME_WIDTH, CHIP8_FRAME_HEIGHT);
 	SDL_SetTextureScaleMode(sdl_frame_texture, SDL_SCALEMODE_NEAREST);
 
 	//set up audio
@@ -493,11 +499,11 @@ void sdl_init()
 void sdl_render_frame()
 {
 	//prepare renderPixels
-	for(int i = 0; i < 64 * 32; i++)
-		sdl_render_pixels[i] = chip8.frameBuffer[i] ? 0xFFFFFFFF : 0x000000FF;
+	for(int i = 0; i < CHIP8_FRAME_WIDTH * CHIP8_FRAME_HEIGHT; i++)
+		sdl_render_pixels[i] = chip8.frameBuffer[i] ? SDL_ON_RGBA : SDL_OFF_RGBA;
 
 	//update texture to draw
-	SDL_UpdateTexture(sdl_frame_texture, 0, sdl_render_pixels, 64 * 4); //one row is 64 positions wide, 4 bytes for one pixel (RGBA)
+	SDL_UpdateTexture(sdl_frame_texture, 0, sdl_render_pixels, CHIP8_FRAME_WIDTH * sizeof(uint32_t)); //one row is CHIP8_FRAME_WIDTH positions wide, 4 bytes (32b) for one pixel (RGBA)
 	//clear screen
 	SDL_RenderClear(sdl_renderer);
 	//draw texture onto screen
