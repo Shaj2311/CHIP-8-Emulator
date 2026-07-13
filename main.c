@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#define DBG_ROM_NAME "test.rom"
+#define DBG_ROM_NAME "pong.rom"
 
 #define INSTRUCT_PER_ITER 10
 
@@ -25,6 +25,7 @@ void interpret_opcode(uint16_t opcode);
 void sdl_init();
 void sdl_render_frame();
 void sdl_fill_audio_buffer();
+void sdl_poll_events();
 void sdl_cleanup();
 
 //hexadecimal character font set
@@ -82,18 +83,7 @@ int main(int argc, char **argv)
 
 		sdl_fill_audio_buffer();
 
-		SDL_Event event;
-		while(SDL_PollEvent(&event))
-		{
-			switch(event.type)
-			{
-				case SDL_EVENT_QUIT:
-					sdl_running = 0;
-					break;
-				//TODO: SDL_EVENT_KEY_DOWN/UP
-			}
-		}
-
+		sdl_poll_events();
 
 		//run INSTRUCT_PER_ITER instructions
 		for(int i = 0; i < INSTRUCT_PER_ITER; i++)
@@ -459,6 +449,136 @@ void sdl_fill_audio_buffer()
 			(int16_t)((SDL_AUDIO_SAMPLE_RATE * sizeof(int16_t)) / 10)
 			)
 		SDL_PutAudioStreamData(sdl_audio_stream, sdl_audio_samples, sizeof(sdl_audio_samples));
+}
+
+void sdl_poll_events()
+{
+	SDL_Event event;
+	while(SDL_PollEvent(&event))
+	{
+		switch(event.type)
+		{
+			case SDL_EVENT_QUIT:
+				sdl_running = 0;
+				break;
+			case SDL_EVENT_KEY_DOWN:
+				if(event.key.repeat)
+					break;
+				puts("Key down");
+				switch(event.key.key)
+				{
+					case SDLK_1: //1
+						chip8.keypad[1] = 1;
+						break;
+					case SDLK_2: //2
+						chip8.keypad[2] = 1;
+						break;
+					case SDLK_3: //3
+						chip8.keypad[3] = 1;
+						break;
+					case SDLK_4: //C
+						chip8.keypad[0xC] = 1;
+						break;
+
+					case SDLK_Q: //4
+						chip8.keypad[4] = 1;
+						break;
+					case SDLK_W: //5
+						chip8.keypad[5] = 1;
+						break;
+					case SDLK_E: //6
+						chip8.keypad[6] = 1;
+						break;
+					case SDLK_R: //D
+						chip8.keypad[0xD] = 1;
+						break;
+
+					case SDLK_A://7
+						chip8.keypad[7] = 1;
+						break;
+					case SDLK_S: //8
+						chip8.keypad[8] = 1;
+						break;
+					case SDLK_D: //9
+						chip8.keypad[9] = 1;
+						break;
+					case SDLK_F: //E
+						chip8.keypad[0xE] = 1;
+						break;
+
+					case SDLK_Z: //A
+						chip8.keypad[0xA] = 1;
+						break;
+					case SDLK_X: //0
+						chip8.keypad[0] = 1;
+						break;
+					case SDLK_C: //B
+						chip8.keypad[0xB] = 1;
+						break;
+					case SDLK_V: //F
+						chip8.keypad[0xF] = 1;
+						break;
+				}
+				break;
+			case SDL_EVENT_KEY_UP:
+				puts("Key up");
+				switch(event.key.key)
+				{
+					case SDLK_1: //1
+						chip8.keypad[1] = 0;
+						break;
+					case SDLK_2: //2
+						chip8.keypad[2] = 0;
+						break;
+					case SDLK_3: //3
+						chip8.keypad[3] = 0;
+						break;
+					case SDLK_4: //C
+						chip8.keypad[0xC] = 0;
+						break;
+
+					case SDLK_Q: //4
+						chip8.keypad[4] = 0;
+						break;
+					case SDLK_W: //5
+						chip8.keypad[5] = 0;
+						break;
+					case SDLK_E: //6
+						chip8.keypad[6] = 0;
+						break;
+					case SDLK_R: //D
+						chip8.keypad[0xD] = 0;
+						break;
+
+					case SDLK_A://7
+						chip8.keypad[7] = 0;
+						break;
+					case SDLK_S: //8
+						chip8.keypad[8] = 0;
+						break;
+					case SDLK_D: //9
+						chip8.keypad[9] = 0;
+						break;
+					case SDLK_F: //E
+						chip8.keypad[0xE] = 0;
+						break;
+
+					case SDLK_Z: //A
+						chip8.keypad[0xA] = 0;
+						break;
+					case SDLK_X: //0
+						chip8.keypad[0] = 0;
+						break;
+					case SDLK_C: //B
+						chip8.keypad[0xB] = 0;
+						break;
+					case SDLK_V: //F
+						chip8.keypad[0xF] = 0;
+						break;
+				}
+				break;
+		}
+	}
 }
 
 void sdl_cleanup()
