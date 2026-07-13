@@ -25,4 +25,5 @@ typedef struct
 
 extern uint8_t fontset[80];
 extern Chip8 chip8;
+
 #endif

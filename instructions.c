@@ -8,6 +8,7 @@ void SYS(uint16_t addr)
 {
 	//The documentation says this instruction is ignored by
 	//modern interpreters. Okay :)
+	(void)addr;
 }
 
 void CLS()
@@ -283,7 +284,6 @@ void LDiv(uint8_t regx)
 			puts("Attempted to write outside of memory, aborting\n");
 			exit(1);
 		}
-
 		chip8.mem[chip8.idx + i] = chip8.vregs[i];
 	}
 }

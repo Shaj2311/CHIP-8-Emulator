@@ -15,18 +15,21 @@
 #define SDL_AUDIO_FREQUENCY 440
 #define SDL_AUDIO_VOLUME 3000
 
+//CHIP-8 helpers
 void chip8_reset_hardware();
 void chip8_load_rom(char *romName);
 void chip8_init();
 void FDE_cycle();
 void interpret_opcode(uint16_t opcode);
 
+//SDL helpers
 void sdl_init();
 void sdl_render_frame();
 void sdl_fill_audio_buffer();
 void sdl_poll_events();
 void sdl_cleanup();
 
+//Emulator helpers
 void parseInput(int argc, char **argv);
 void displayHelp();
 
@@ -94,7 +97,7 @@ int main(int argc, char **argv)
 
 		sdl_poll_events();
 
-		//run INSTRUCT_PER_ITER instructions
+		//run CYCLES_PER_FRAME instructions
 		for(int i = 0; i < CYCLES_PER_FRAME; i++)
 			FDE_cycle();
 
@@ -112,9 +115,7 @@ int main(int argc, char **argv)
 		if(chip8.delay)
 			chip8.delay--;
 		if(chip8.sound)
-		{
 			chip8.sound--;
-		}
 
 		//update audio status
 		if(chip8.sound == 0)
@@ -123,6 +124,7 @@ int main(int argc, char **argv)
 			SDL_ResumeAudioStreamDevice(sdl_audio_stream);
 	}
 
+	//final cleanup
 	sdl_cleanup();
 	puts("Shutting down");
 	return 0;
@@ -130,6 +132,7 @@ int main(int argc, char **argv)
 
 void parseInput(int argc, char **argv)
 {
+	//validate argument count
 	if(argc < 2)
 	{
 		puts("ROM not specified");
@@ -162,7 +165,6 @@ void parseInput(int argc, char **argv)
 	}
 	else
 		CYCLES_PER_FRAME = DEFAULT_CYCLES_PER_FRAME;
-	printf("INSTRUCT_PER_ITER: %d\n", CYCLES_PER_FRAME);
 }
 
 void displayHelp()
@@ -280,8 +282,8 @@ void chip8_init()
 void FDE_cycle()
 {
 	//use fancy bit manipulation to read Big Endian to Big Endian
-	//(directly fetching a uint16_t value will flip the bytes around as
-	// it's expecting them to be in Little Endian)
+	//(directly fetching a uint16_t value instead will flip the bytes
+	//around as it's expecting them to be in Little Endian)
 	uint16_t opcode = (chip8.mem[chip8.pc] << 8) | chip8.mem[chip8.pc + 1];
 
 	//move forward by two bytes
@@ -290,6 +292,7 @@ void FDE_cycle()
 	if(chip8.pc > 0xFFF)
 		chip8.pc = 0x200;
 
+	//execute instruction
 	interpret_opcode(opcode);
 }
 
@@ -505,8 +508,6 @@ void sdl_render_frame()
 
 void sdl_fill_audio_buffer()
 {
-	int16_t bytesQueued = SDL_GetAudioStreamQueued(sdl_audio_stream);
-
 	if(
 			SDL_GetAudioStreamQueued(sdl_audio_stream)
 			<
@@ -528,7 +529,6 @@ void sdl_poll_events()
 			case SDL_EVENT_KEY_DOWN:
 				if(event.key.repeat)
 					break;
-				puts("Key down");
 				switch(event.key.key)
 				{
 					case SDLK_1: //1
@@ -585,7 +585,6 @@ void sdl_poll_events()
 				}
 				break;
 			case SDL_EVENT_KEY_UP:
-				puts("Key up");
 				switch(event.key.key)
 				{
 					case SDLK_1: //1
