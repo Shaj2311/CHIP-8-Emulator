@@ -22,3 +22,6 @@ cd ./CHIP-8-Emulator
 make
 ./chip8 -h
 ```
+
+## Learn More
+To learn more about CHIP-8, visit the [CHIP-8 Wiki](https://en.wikipedia.org/wiki/CHIP-8) and [this technical reference](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
