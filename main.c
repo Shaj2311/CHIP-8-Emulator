@@ -28,6 +28,7 @@ void sdl_poll_events();
 void sdl_cleanup();
 
 void parseInput(int argc, char **argv);
+void displayHelp();
 
 //hexadecimal character font set
 uint8_t fontset[80] = {
@@ -132,27 +133,54 @@ void parseInput(int argc, char **argv)
 	if(argc < 2)
 	{
 		puts("ROM not specified");
+		puts("Try chip8 -h for more information");
 		exit(1);
 	}
 	if(argc > 3)
 	{
 		printf("Invalid argument: %s\n", argv[3]);
+		puts("Try chip8 -h for more information");
 		exit(1);
 	}
 
 	//Parse input
+	if(argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
+	{
+		displayHelp();
+		exit(0);
+	}
+
 	ROM_NAME = argv[1];
 	if(argc == 3)
 	{
 		if(!(CYCLES_PER_FRAME = (int)strtol(argv[2], 0, 10)))
 		{
-			printf("Invalid value: %d\n", CYCLES_PER_FRAME);
+			printf("Invalid value: %s\n", argv[2]);
+			puts("Try chip8 -h for more information");
 			exit(1);
 		}
 	}
 	else
 		CYCLES_PER_FRAME = DEFAULT_CYCLES_PER_FRAME;
 	printf("INSTRUCT_PER_ITER: %d\n", CYCLES_PER_FRAME);
+}
+
+void displayHelp()
+{
+	printf(
+			"Usage: chip8 [OPTIONS] <ROM_NAME> [CUSTOM_CYCLES_PER_FRAME]\n\n"
+
+			"Launch CHIP-8 Emulator and run a ROM\n\n"
+
+			"Positional Arguments:\n"
+			"<ROM_NAME>                        Path to target ROM\n"
+			"[CUSTOM_CYCLES_PER_FRAME]         Custom number of FDE cycles to run per frame (Default: %d)\n\n"
+
+			"Options:\n"
+			"-h | --help\t Display this help message\n",
+
+			DEFAULT_CYCLES_PER_FRAME
+			);
 }
 
 void chip8_reset_hardware()
