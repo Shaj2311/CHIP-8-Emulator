@@ -4,9 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#define DBG_ROM_NAME "pong.rom"
 
-#define INSTRUCT_PER_ITER 10
+#define DEFAULT_CYCLES_PER_FRAME 10
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -27,6 +26,8 @@ void sdl_render_frame();
 void sdl_fill_audio_buffer();
 void sdl_poll_events();
 void sdl_cleanup();
+
+void parseInput(int argc, char **argv);
 
 //hexadecimal character font set
 uint8_t fontset[80] = {
@@ -61,8 +62,15 @@ uint64_t sdl_perf_freq;
 int16_t sdl_audio_samples[SDL_AUDIO_SAMPLE_RATE];
 int sdl_running = 1;
 
+//Runtime Globals
+char *ROM_NAME;
+int CYCLES_PER_FRAME;
+
 int main(int argc, char **argv)
 {
+	//parse command line args (ROM name and custom cycles per frame)
+	parseInput(argc, argv);
+
 	//set performance frequency (to convert ticks to milliseconds later)
 	sdl_perf_freq = SDL_GetPerformanceFrequency();
 
@@ -86,7 +94,7 @@ int main(int argc, char **argv)
 		sdl_poll_events();
 
 		//run INSTRUCT_PER_ITER instructions
-		for(int i = 0; i < INSTRUCT_PER_ITER; i++)
+		for(int i = 0; i < CYCLES_PER_FRAME; i++)
 			FDE_cycle();
 
 		sdl_render_frame();
@@ -117,6 +125,34 @@ int main(int argc, char **argv)
 	sdl_cleanup();
 	puts("Shutting down");
 	return 0;
+}
+
+void parseInput(int argc, char **argv)
+{
+	if(argc < 2)
+	{
+		puts("ROM not specified");
+		exit(1);
+	}
+	if(argc > 3)
+	{
+		printf("Invalid argument: %s\n", argv[3]);
+		exit(1);
+	}
+
+	//Parse input
+	ROM_NAME = argv[1];
+	if(argc == 3)
+	{
+		if(!(CYCLES_PER_FRAME = (int)strtol(argv[2], 0, 10)))
+		{
+			printf("Invalid value: %d\n", CYCLES_PER_FRAME);
+			exit(1);
+		}
+	}
+	else
+		CYCLES_PER_FRAME = DEFAULT_CYCLES_PER_FRAME;
+	printf("INSTRUCT_PER_ITER: %d\n", CYCLES_PER_FRAME);
 }
 
 void chip8_reset_hardware()
@@ -207,7 +243,7 @@ void chip8_init()
 	memcpy(chip8.mem + 0x050, fontset, sizeof(fontset));
 
 	//load target program to memory
-	chip8_load_rom(DBG_ROM_NAME);
+	chip8_load_rom(ROM_NAME);
 
 	//set program counter to 0x200
 	chip8.pc = 0x200;
