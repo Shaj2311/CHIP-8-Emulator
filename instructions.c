@@ -197,15 +197,15 @@ void DRW(uint8_t regx, uint8_t regy, uint8_t nibble)
 
 void SKP(uint8_t regx)
 {
-	//skip next instruction if key x is pressed
-	if(chip8.keypad[regx])
+	//skip next instruction if key with value of x is pressed
+	if(chip8.keypad[chip8.vregs[regx]])
 		chip8.pc += 2;
 }
 
 void SKNP(uint8_t regx)
 {
-	//skip next instruction if key x is not pressed
-	if(!chip8.keypad[regx])
+	//skip next instruction if key with value of x is not pressed
+	if(!chip8.keypad[chip8.vregs[regx]])
 		chip8.pc += 2;
 }
 
